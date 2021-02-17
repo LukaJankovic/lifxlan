@@ -284,11 +284,17 @@ class SetGroup(Message):
         self.payload_fields.append(("Group", self.group))
         self.payload_fields.append(("Label", self.label))
         self.payload_fields.append(("Updated At", self.updated_at))
-        group = b"".join(little_endian(bitstring.pack("8", b)) for b in self.group)
+
+        try:
+            group = b"".join(little_endian(bitstring.pack("8", b)) for b in self.group)
+        except ValueError: # because of differences in Python 2 and 3
+            group = b"".join(little_endian(bitstring.pack("8", ord(b))) for b in self.group)
+
         try:
             label = b"".join(little_endian(bitstring.pack("8", c)) for c in self.label.encode('utf-8'))
         except ValueError: # because of differences in Python 2 and 3
             label = b"".join(little_endian(bitstring.pack("8", ord(c))) for c in self.label.encode('utf-8'))
+
         label_padding = b"".join(little_endian(bitstring.pack("8", 0)) for i in range(32-len(self.label)))
         label += label_padding
         updated_at = little_endian(bitstring.pack("64", self.updated_at))
